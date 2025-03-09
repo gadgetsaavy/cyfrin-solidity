@@ -1,61 +1,61 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.16;
 
-import "./PriceConvertor.sol"
-// constant, immutable
+pragma solidity ^0.8.8;
 
-// 859,757
-// 840,197
-
-error NotOwner();
+import {PriceConvertor} from "./PriceConvertor.sol";
 
 contract FundMe {
-    using PriceConvertor for uint256;
+    using PriceConverter for uint256;
 
-    uint256 public constant MINIMUM_USD = 50 * 1e18; // 1 * 10 ** 18
-    // 21,541 gas - constant
-    // 23,515 gas - non-constant
-    // 21,415 * 141000000000
-    // 23,515 * 141000000000
-
-    function fund() public payable {
-        require(msg.value,getConversionRate() >= MINIMUM_USD,"Ain't Send Enough Ether.");
-        funders.push(msg.sender);
-        addressToAmountFunded[msg.sender] += msg.value;
-    }
-
-    function withdraw() public onluOwner {
-        /* starting index, ending index, step amount */
-        for(uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++){
-            // code
-            address funder = funders[funderIndex];
-            addressToAmountFunded[funder] = 0;
-        }}
-        
-        // Reset the array.
-        funders = new address[](0);
-
-}
+    uint256 public minimumUsd = 5e18;
 
     address[] public funders;
-    mapping(address => uint256) public addressToAmountFunded;
+    mapping(address => uint256 amountFunded) public addressToAmountFunded;
 
-    address public immutable i_owner;
-    // 21,508 gas - immutable
-    // 23,644 gas - non-immutable
+    address public immutable owner;
 
     constructor() {
-        i_owner = msg.sender;
+        owner = msg.sender;
     }
 
-    funders = new address[](0);
-    (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance
-    require(callSuccess, "Call Failed.");
-
+    function fund() public payable {
+    require(msg.value.getConversionRate >= minimumUsd, "Didn't send enough ETH."); // 1e18 = 1 eth = 1000000000000000000 wei
+    funders.push(msg.sender);
+    addressToAmountFunded[msg.sender] += msg.value;
     }
 
-}
+    modifier onlyOwner() {
+            require(msg.sender == owner, "Unauthorized.");
+            _;
+    }
 
-    modifier(msg.sender == i_owner, "Sender is not the owner.;");
-    _;
+    function withdraw() public onlyOwner {
+        //require(msg.sender == owner, "Unauthorized.");
+        // for loop
+        // 1, 2, 3, 4 element
+        // 0, 1, 2, 3 index
+        for(/*comments in here */ uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+        funders = new address[](0);
+        // withdraw the funds
 
+        //transfer
+        // payable(msg.sender).transfer(address(this).balance);
+        // //send
+        // bool sendSuccess = payable(msg.sender).send(address(this).balance);
+        // require(sendSuccess, "Send Failed.");
+        //call
+        (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Call Failed");
+        }
+
+        fallback() external payable {
+            fund();
+        }
+
+        receive() external payable {
+            fund();
+        }
+    }
